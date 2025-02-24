@@ -197,7 +197,7 @@
 
           <mat-form-field class="form-field" color="accent">
             <mat-label>Bucket Name</mat-label>
-            <input [(ngModel)]="amazonS3DataAddress.bucketName" matInput>
+            <input required [(ngModel)]="amazonS3DataAddress.bucketName" matInput>
           </mat-form-field>
 
           <mat-form-field class="form-field" color="accent">
@@ -212,17 +212,17 @@
 
           <mat-form-field class="form-field" color="accent">
             <mat-label>Access Key Id</mat-label>
-            <input [(ngModel)]="amazonS3DataAddress.accessKeyId" matInput>
+            <input required [(ngModel)]="amazonS3DataAddress.accessKeyId" matInput>
           </mat-form-field>
 
           <mat-form-field class="form-field" color="accent">
             <mat-label>Secret Access Key</mat-label>
-            <input [(ngModel)]="amazonS3DataAddress.secretAccessKey" matInput>
+            <input required [(ngModel)]="amazonS3DataAddress.secretAccessKey" matInput>
           </mat-form-field>
 
           <mat-form-field class="form-field" color="accent">
             <mat-label>Endpoint Override</mat-label>
-            <input [(ngModel)]="amazonS3DataAddress.endpointOverride" matInput>
+            <input required [(ngModel)]="amazonS3DataAddress.endpointOverride" matInput>
           </mat-form-field>
         </div>
 

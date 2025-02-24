@@ -13,6 +13,7 @@ import { JsonDialogData } from '../../json-dialog/json-dialog/json-dialog.data';
 import { JsonDialogComponent } from '../../json-dialog/json-dialog/json-dialog.component'
 import { PolicyBuilder } from '@think-it-labs/edc-connector-client';
 import { Router } from '@angular/router';
+import { catchError, filter, from, interval, of, switchMap, takeUntil, tap, timer } from 'rxjs';
 
 export interface ContractOffersDialogData {
   assetId: string;
@@ -192,48 +193,66 @@ export class ContractOffersViewerComponent {
         offerId: initiateRequest.policy["@id"]
       });
 
-
-      if (!this.pollingHandleNegotiation) {
-        this.checkActiveNegotiations();
-      }
+      this.checkActiveNegotiations(negotiationId, initiateRequest.policy["@id"]);
     }, error => {
       console.error(error);
       this.notificationService.showError("Error starting negotiation");
     });
   }
 
-  checkActiveNegotiations() {
-    // there are no active negotiations
-    this.pollingHandleNegotiation = setInterval(() => {
+  checkActiveNegotiations(negotiationId: string, offerId: string) {
+    const timeout$ = timer(30000).pipe(
+      tap(() => {
+        if (this.runningNegotiations.has(offerId)) {
+          this.notificationService.showWarning(
+            `Negotiation [${negotiationId}] timed out after 30 seconds.`
+          );
+          this.runningNegotiations.delete(offerId);
+        }
+      })
+    );
 
-      const finishedNegotiationStates = [
-        "VERIFIED",
-        "TERMINATED",
-        "FINALIZED",
-        "ERROR"];
-
-      for (const negotiation of this.runningNegotiations.values()) {
-        this.apiService.getNegotiationState(negotiation.id).subscribe(updatedNegotiation => {
-          if (finishedNegotiationStates.includes(updatedNegotiation.state)) {
-            let offerId = negotiation.offerId;
+    this.pollingHandleNegotiation = interval(2000).pipe(
+      takeUntil(timeout$),
+      switchMap(() => from([...this.runningNegotiations.values()])),
+      switchMap(negotiation =>
+        this.apiService.getNegotiationState(negotiation.id).pipe(
+          catchError(error => {
+            console.error("Polling error:", error);
+            this.notificationService.showError("Error polling negotiation");
+            this.runningNegotiations.delete(negotiation.offerId);
+            return of(null);
+          })
+        )
+      ),
+      filter(updatedNegotiation => updatedNegotiation !== null),
+      tap(updatedNegotiation => {
+        const finishedStates = ["VERIFIED", "TERMINATED", "FINALIZED", "ERROR"];
+        if (finishedStates.includes(updatedNegotiation.state)) {
             this.runningNegotiations.delete(offerId);
+
+          if (updatedNegotiation.state === "VERIFIED" || updatedNegotiation.state === "FINALIZED") {
+            this.finishedNegotiations.set(offerId, updatedNegotiation);
+            this.notificationService.showInfo("Contract Negotiation complete!");
+          } else if (updatedNegotiation.state === "TERMINATED") {
             const errorDetail = updatedNegotiation.optionalValue("edc", "errorDetail");
-            if (updatedNegotiation["state"] === "VERIFIED" || updatedNegotiation["state"] === "FINALIZED") {
-              this.finishedNegotiations.set(offerId, updatedNegotiation);
-              this.notificationService.showInfo("Contract Negotiation complete!");
-            } else if (updatedNegotiation["state"] === "TERMINATED" && typeof errorDetail === 'string' &&  errorDetail.includes("Contract offer is not valid")) {
+            if (typeof errorDetail === 'string' && errorDetail.includes("Contract offer is not valid")) {
               this.finishedNegotiations.set(offerId, updatedNegotiation);
               this.notificationService.showError("Contract offer is not valid.");
             }
           }
 
           if (this.runningNegotiations.size === 0) {
-            clearInterval(this.pollingHandleNegotiation);
-            this.pollingHandleNegotiation = undefined;
+            this.cleanupPolling();
           }
-        });
-      }
-    }, 1000);
+        }
+      })
+    ).subscribe();
+  }
+
+  private cleanupPolling() {
+    this.pollingHandleNegotiation?.unsubscribe();
+    this.pollingHandleNegotiation = undefined;
   }
 
   getJsonPolicy(policy: Policy): any {
