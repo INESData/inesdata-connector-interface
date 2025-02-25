@@ -1,7 +1,7 @@
 import { Component, Inject, QueryList, ViewChildren } from '@angular/core';
 import { NgModel } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
-import { DataAddress, HttpDataAddress } from '@think-it-labs/edc-connector-client';
+import { DataAddress } from '@think-it-labs/edc-connector-client';
 import { AmazonS3DataAddress } from 'src/app/shared/models/amazon-s3-data-address';
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { DATA_ADDRESS_TYPES } from 'src/app/shared/utils/app.constants';
@@ -29,10 +29,6 @@ export class ContractTransferDialog {
     region: ''
   };
 
-  httpDataAddress: HttpDataAddress = {
-    type: 'HttpData'
-  };
-
   @ViewChildren(NgModel) formControls: QueryList<NgModel>;
 
   constructor(@Inject('TRANSFER_TYPES') public transferTypes: StorageType[],
@@ -56,8 +52,6 @@ export class ContractTransferDialog {
         this.notificationService.showError("Review the form fields");
         return;
       }
-    } else if (this.storageTypeId === DATA_ADDRESS_TYPES.httpData) {
-      dataAddress = this.httpDataAddress;
     } else if (this.storageTypeId === DATA_ADDRESS_TYPES.inesDataStore) {
       dataAddress = this.inesDataDataAddress;
     } else {
@@ -80,10 +74,7 @@ export class ContractTransferDialog {
     if (this.storageTypeId === DATA_ADDRESS_TYPES.amazonS3 && (!this.amazonS3DataAddress.region || !this.amazonS3DataAddress.bucketName
         || !this.amazonS3DataAddress.endpointOverride || !this.amazonS3DataAddress.secretAccessKey || !this.amazonS3DataAddress.accessKeyId)) {
       return false;
-    }
-    else if (this.storageTypeId === DATA_ADDRESS_TYPES.httpData && (!this.httpDataAddress.name || !this.httpDataAddress.baseUrl)) {
-      return false;
-    }else{
+    } else {
       return true;
     }
   }

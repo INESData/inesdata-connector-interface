@@ -40,7 +40,7 @@
         </mat-card-content>
         <div *ngIf="isNotProvisionedByItself(contract)">
           <mat-card-actions class="card-actions text-align-end">
-            <button color="accent" mat-stroked-button (click)="onTransferClicked(contract)">
+            <button color="accent" mat-stroked-button (click)="onTransferClicked(contract)" [disabled]="isTransferInProgress(contract.id!)">
               <mat-icon>downloading</mat-icon> Transfer
             </button>
           </mat-card-actions>

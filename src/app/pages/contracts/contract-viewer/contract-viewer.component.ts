@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ContractAgreementService } from "../../../shared/services/contractAgreement.service";
-import { firstValueFrom, from } from "rxjs";
+import { firstValueFrom, from, interval, Observable, of, timer } from "rxjs";
 import { ContractAgreement, IdResponse, TransferProcessInput } from "../../../shared/models/edc-connector-entities";
-import { filter, first, switchMap, tap } from "rxjs/operators";
+import { catchError, filter, finalize, first, switchMap, takeUntil, tap } from "rxjs/operators";
 import { NotificationService } from "../../../shared/services/notification.service";
 import { MatDialog } from "@angular/material/dialog";
 import { CatalogBrowserService } from "../../../shared/services/catalog-browser.service";
@@ -48,14 +48,10 @@ export class ContractViewerComponent implements OnInit {
   }
 
   private static isFinishedState(storageType: string, state: string): boolean {
-    if (storageType === 'HttpData-PULL' && state === 'STARTED') {
-      return true;
-    } else {
-      return [
-        "COMPLETED",
-        "ERROR",
-        "ENDED","TERMINATED"].includes(state);
-    }
+    return [
+      "COMPLETED",
+      "ERROR",
+      "ENDED", "TERMINATED"].includes(state);
   }
 
   ngOnInit(): void {
@@ -97,7 +93,7 @@ export class ContractViewerComponent implements OnInit {
       error: (error) => {
         console.error("Error closing dialog", error);
       },
-      complete: () => {}
+      complete: () => { }
     });
   }
 
@@ -148,25 +144,15 @@ export class ContractViewerComponent implements OnInit {
   private async createTransferRequest(contract: ContractAgreement, dataAddress: DataAddress): Promise<TransferProcessInput> {
     const dataOffer = await this.getDatasetFromFederatedCatalog(contract.assetId, contract.providerId);
 
-    const transferType = this.getTransferType(dataAddress.type);
-
     const iniateTransfer: TransferProcessInput = {
       assetId: dataOffer.assetId,
       counterPartyAddress: dataOffer.endpointUrl,
       contractId: contract.id,
-      transferType: transferType,
+      transferType: 'AmazonS3-PUSH',
       dataDestination: dataAddress
     };
 
     return iniateTransfer;
-  }
-
-  private getTransferType(type: string) {
-    if(type === 'HttpData') {
-      return 'HttpData-PULL'
-    } else {
-      return 'AmazonS3-PUSH'
-    }
   }
 
   /**
@@ -175,7 +161,7 @@ export class ContractViewerComponent implements OnInit {
    * @param assetId Asset ID of the asset that is associated with the contract.
    * @param provider Participant ID of the catalog which owns the asset
    */
-   private async getDatasetFromFederatedCatalog(assetId: string, provider: string): Promise<DataOffer> {
+  private async getDatasetFromFederatedCatalog(assetId: string, provider: string): Promise<DataOffer> {
 
     const querySpec: QuerySpec = {
       offset: 0,
@@ -204,7 +190,19 @@ export class ContractViewerComponent implements OnInit {
   }
 
   private startPolling(transferProcessId: IdResponse, contractId: string) {
-    // track this transfer process
+    const timeout$ = timer(30000).pipe(
+      tap(() => {
+        this.notificationService.showWarning(
+          `Transfer [${transferProcessId.id}] timed out after 30 seconds.`,
+          "Check Transfer",
+          () => {
+            this.router.navigate(['/transfer-history']);
+          }
+        );
+        this.removeTransferFromList(transferProcessId.id);
+      })
+    );
+
     this.runningTransfers.push({
       processId: transferProcessId.id,
       state: TransferProcessStates.REQUESTED,
@@ -212,54 +210,56 @@ export class ContractViewerComponent implements OnInit {
     });
 
     if (!this.pollingHandleTransfer) {
-      this.pollingHandleTransfer = setInterval(this.pollRunningTransfers(), 1000);
+      this.pollingHandleTransfer = this.pollRunningTransfers(timeout$)
+        .pipe(finalize(() => this.cleanupPolling()))
+        .subscribe();
     }
-
   }
 
-  private pollRunningTransfers() {
-    return () => {
-      from(this.runningTransfers) // Create observable from array
-        .pipe(
-          switchMap(runningTransferProcess =>
-            this.catalogService.getTransferProcessesById(runningTransferProcess.processId)
-          ), // Fetch from API
-          filter(transferProcess =>
-            ContractViewerComponent.isFinishedState(
-              transferProcess['https://w3id.org/edc/v0.0.1/ns/transferType'][0]['@value'],
-              transferProcess.state
-            )
-          ), // Only use finished ones
-          tap(transferProcess => {
-            // Remove from in-progress
-            this.runningTransfers = this.runningTransfers.filter(rtp => rtp.processId !== transferProcess.id);
-
-            // Show notification
-            this.notificationService.showWarning(
-              `Transfer [${transferProcess.id}] complete! Check if the process was successful`,
-              "Show me!",
-              () => {
-                this.router.navigate(['/transfer-history']);
-              }
-            );
+  private pollRunningTransfers(timeout$: Observable<number>) {
+    return interval(2000).pipe(
+      takeUntil(timeout$),
+      switchMap(() => from([...this.runningTransfers])),
+      switchMap(runningTransferProcess =>
+        this.catalogService.getTransferProcessesById(runningTransferProcess.processId).pipe(
+          catchError(error => {
+            console.error("Polling error:", error);
+            this.notificationService.showError("Error polling transfer process");
+            this.removeTransferFromList(runningTransferProcess.processId);
+            return of(null);
           })
         )
-        .subscribe({
-          next: () => {
-            // Clear interval if no running transfers are left
-            if (this.runningTransfers.length === 0) {
-              clearInterval(this.pollingHandleTransfer);
-              this.pollingHandleTransfer = undefined;
-            }
-          },
-          error: (error) => {
-            this.notificationService.showError(error);
-          },
-          complete: () => {
-            console.log("Polling transfers completed.");
+      ),
+      filter(transferProcess => transferProcess !== null &&
+        ContractViewerComponent.isFinishedState(
+          transferProcess['https://w3id.org/edc/v0.0.1/ns/transferType'][0]['@value'],
+          transferProcess.state
+        )
+      ),
+      tap(transferProcess => {
+        this.removeTransferFromList(transferProcess.id);
+        this.notificationService.showWarning(
+          `Transfer [${transferProcess.id}] complete! Check if the process was successful`,
+          "Show me!",
+          () => {
+            this.router.navigate(['/transfer-history']);
           }
-        });
-    };
+        );
+      })
+    );
   }
+
+  private removeTransferFromList(processId: string) {
+    this.runningTransfers = this.runningTransfers.filter(rtp => rtp.processId !== processId);
+    if (this.runningTransfers.length === 0) {
+      this.cleanupPolling();
+    }
+  }
+
+  private cleanupPolling() {
+    clearInterval(this.pollingHandleTransfer);
+    this.pollingHandleTransfer = undefined;
+  }
+
 
 }

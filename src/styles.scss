@@ -473,7 +473,7 @@ mat-paginator svg {
 }
 
 .mdc-list-item__secondary-text,
-mat-card-actions:not([disabled]) button,
+mat-card-actions button:not([disabled]),
 button:not([disabled]) mat-icon,
 .mat-mdc-menu-submenu-icon,
 mat-hint,
