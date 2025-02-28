@@ -4,6 +4,7 @@ import {PolicyOperatorConfig} from './policy-operators';
 import { UiPolicyConstraint, UiPolicyLiteral } from './ui-policy-constraint';
 import { filterNonNull } from '../../utils/array-utils';
 import { jsonValidator } from 'src/app/shared/validators/json-validator';
+import { adjustDate, convertUTCToLocalDate } from 'src/app/shared/utils/date-utils';
 
 export interface PolicyFormAdapter<T> {
   displayText: (value: UiPolicyLiteral) => string | null;
@@ -55,7 +56,7 @@ export const localDateAdapter: PolicyFormAdapter<Date | null> = {
       if (!value) {
         return value;
       }
-      return format(new Date(value), 'yyyy-MM-dd');
+      return format(convertUTCToLocalDate(value), 'yyyy-MM-dd');
     } catch (e) {
       return '' + value;
     }
@@ -72,7 +73,7 @@ export const localDateAdapter: PolicyFormAdapter<Date | null> = {
       return null;
     }
   },
-  buildValueFn: (value) => stringLiteral(value?.toISOString()),
+  buildValueFn: (value, operator) => stringLiteral(adjustDate(value, operator.id)),
   emptyConstraintValue: () => ({
     operator: 'LT',
     right: {
