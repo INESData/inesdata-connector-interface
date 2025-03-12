@@ -293,7 +293,7 @@ export class AssetCreateComponent implements OnInit {
       if (this.storageTypeId === DATA_ADDRESS_TYPES.httpData && (!this.httpDataAddress.name || !this.httpDataAddress.baseUrl || !this.validateUrl())) {
         return false;
       }
-      if (this.storageTypeId === DATA_ADDRESS_TYPES.amazonS3 && !this.amazonS3DataAddress.region) {
+      if (this.storageTypeId === DATA_ADDRESS_TYPES.amazonS3 && (!this.amazonS3DataAddress.region || !this.amazonS3DataAddress.accessKeyId || !this.amazonS3DataAddress.secretAccessKey || !this.amazonS3DataAddress.bucketName || !this.amazonS3DataAddress.endpointOverride)) {
         return false;
       } else if (this.storageTypeId === DATA_ADDRESS_TYPES.inesDataStore && !this.inesDataStoreAddress.file) {
         return false;
