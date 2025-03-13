@@ -5,27 +5,34 @@ export function adjustDate(date: Date, operator: OperatorDto): string | null {
     return null;
   }
 
-  if(operator === 'LEQ' || operator === 'LT') {
-    const adjustedDate = new Date(Date.UTC(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      23, 59, 59, 999
-    ));
+  let adjustedDate: Date;
 
-    return adjustedDate.toISOString();
-  } else {
-    const adjustedDate = new Date(Date.UTC(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      0, 0, 0, 0
-    ));
-
-    return adjustedDate.toISOString();
+  switch (operator) {
+    case 'LT':
+    case 'GEQ':
+      adjustedDate = new Date(Date.UTC(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        0, 0, 0, 0
+      ));
+      break;
+    case 'LEQ':
+    case 'GT':
+      adjustedDate = new Date(Date.UTC(
+        date.getFullYear(),
+        date.getMonth(),
+        date.getDate(),
+        23, 59, 59, 999
+      ));
+      break;
+    default:
+      return null;
   }
 
+  return adjustedDate.toISOString();
 }
+
  export function convertUTCToLocalDate(utcISOString: string): Date {
   const utcDate = new Date(utcISOString);
 

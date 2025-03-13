@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ContractAgreementService } from "../../../shared/services/contractAgreement.service";
-import { firstValueFrom, from, interval, Observable, of, timer } from "rxjs";
+import { firstValueFrom, from, interval, Observable, of, timer, Subscription } from "rxjs";
 import { ContractAgreement, IdResponse, TransferProcessInput } from "../../../shared/models/edc-connector-entities";
 import { catchError, filter, finalize, first, switchMap, takeUntil, tap } from "rxjs/operators";
 import { NotificationService } from "../../../shared/services/notification.service";
@@ -32,6 +32,7 @@ export class ContractViewerComponent implements OnInit {
   contracts: ContractAgreement[] = [];
   private runningTransfers: RunningTransferProcess[] = [];
   private pollingHandleTransfer?: any;
+  private timeoutSubscription?: Subscription;
   PARTICIPANT_ID = `${environment.runtime.participantId}`;
 
   // Pagination
@@ -203,6 +204,8 @@ export class ContractViewerComponent implements OnInit {
       })
     );
 
+    this.timeoutSubscription = timeout$.subscribe();
+
     this.runningTransfers.push({
       processId: transferProcessId.id,
       state: TransferProcessStates.REQUESTED,
@@ -210,15 +213,14 @@ export class ContractViewerComponent implements OnInit {
     });
 
     if (!this.pollingHandleTransfer) {
-      this.pollingHandleTransfer = this.pollRunningTransfers(timeout$)
+      this.pollingHandleTransfer = this.pollRunningTransfers()
         .pipe(finalize(() => this.cleanupPolling()))
         .subscribe();
     }
   }
 
-  private pollRunningTransfers(timeout$: Observable<number>) {
+  private pollRunningTransfers() {
     return interval(2000).pipe(
-      takeUntil(timeout$),
       switchMap(() => from([...this.runningTransfers])),
       switchMap(runningTransferProcess =>
         this.catalogService.getTransferProcessesById(runningTransferProcess.processId).pipe(
@@ -237,6 +239,7 @@ export class ContractViewerComponent implements OnInit {
         )
       ),
       tap(transferProcess => {
+        this.timeoutSubscription?.unsubscribe();
         this.removeTransferFromList(transferProcess.id);
         this.notificationService.showWarning(
           `Transfer [${transferProcess.id}] complete! Check if the process was successful`,
@@ -259,7 +262,6 @@ export class ContractViewerComponent implements OnInit {
   private cleanupPolling() {
     clearInterval(this.pollingHandleTransfer);
     this.pollingHandleTransfer = undefined;
+    this.timeoutSubscription?.unsubscribe();
   }
-
-
 }
