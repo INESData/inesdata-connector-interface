@@ -103,8 +103,6 @@ export class AssetCreateComponent implements OnInit {
   config = CKEDITOR_CONFIG
   selectedAssetTypeVocabularies: Vocabulary[]
 
-  urlPattern: RegExp = /^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z]{2,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)$/;
-
   private fetch$ = new BehaviorSubject(null);
 
   ngOnInit(): void {
@@ -295,7 +293,7 @@ export class AssetCreateComponent implements OnInit {
       if (this.storageTypeId === DATA_ADDRESS_TYPES.httpData && (!this.httpDataAddress.name || !this.httpDataAddress.baseUrl || !this.validateUrl())) {
         return false;
       }
-      if (this.storageTypeId === DATA_ADDRESS_TYPES.amazonS3 && !this.amazonS3DataAddress.region) {
+      if (this.storageTypeId === DATA_ADDRESS_TYPES.amazonS3 && (!this.amazonS3DataAddress.region || !this.amazonS3DataAddress.accessKeyId || !this.amazonS3DataAddress.secretAccessKey || !this.amazonS3DataAddress.bucketName || !this.amazonS3DataAddress.endpointOverride)) {
         return false;
       } else if (this.storageTypeId === DATA_ADDRESS_TYPES.inesDataStore && !this.inesDataStoreAddress.file) {
         return false;
@@ -370,8 +368,12 @@ export class AssetCreateComponent implements OnInit {
   }
 
   validateUrl(): boolean {
-    const regex = new RegExp(this.urlPattern);
-    return regex.test(this.httpDataAddress.baseUrl);
+    try {
+      var url = new URL(this.httpDataAddress.baseUrl);
+    } catch (e) {
+      return false;
+    }
+    return url.protocol === "http:" || url.protocol === "https:";
   }
 
 

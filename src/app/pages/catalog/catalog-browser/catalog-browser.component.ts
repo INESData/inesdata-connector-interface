@@ -15,7 +15,7 @@ import { Router } from '@angular/router';
 })
 export class CatalogBrowserComponent implements OnInit {
 
-  dataOffers: DataOffer[];
+  dataOffers: DataOffer[] = [];
 
   // Pagination
   pageSize = 10;

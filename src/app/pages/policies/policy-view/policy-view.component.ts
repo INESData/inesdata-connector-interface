@@ -23,7 +23,7 @@ export class PolicyViewComponent implements OnInit {
   deleteDone = new EventEmitter();
 
   policies: PolicyDefinition[];
-  policyCards: PolicyCard[];
+  policyCards: PolicyCard[] = [];
   private fetch$ = new BehaviorSubject(null);
   private readonly errorOrUpdateSubscriber: Observer<IdResponse>;
 

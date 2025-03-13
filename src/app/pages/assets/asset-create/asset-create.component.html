@@ -64,7 +64,7 @@
       </div>
     </mat-tab>
 
-    <mat-tab label="Detailed information" *ngIf="vocabularies?.length > 0">
+    <mat-tab label="Detailed information" *ngIf="vocabularies?.length > 0 && ((defaultVocabularies?.length>0 && defaultForms?.length>0) || selectedVocabularies?.length>0)">
       <mat-tab-group animationDuration="0ms" mat-stretch-tabs="false" mat-align-tabs="start">
         <mat-tab label="Default information" *ngIf="defaultVocabularies?.length>0 && defaultForms?.length>0">
           <div class="asset-creation-vocabularies">
@@ -140,7 +140,7 @@
 
           <mat-form-field class="form-field" color="accent">
             <mat-label>Base URL</mat-label>
-            <input [(ngModel)]="httpDataAddress.baseUrl" [pattern]="urlPattern" matInput required>
+            <input [(ngModel)]="httpDataAddress.baseUrl" matInput required>
           </mat-form-field>
 
           <mat-form-field class="form-field" color="accent">
@@ -197,7 +197,7 @@
 
           <mat-form-field class="form-field" color="accent">
             <mat-label>Bucket Name</mat-label>
-            <input [(ngModel)]="amazonS3DataAddress.bucketName" matInput>
+            <input required [(ngModel)]="amazonS3DataAddress.bucketName" matInput>
           </mat-form-field>
 
           <mat-form-field class="form-field" color="accent">
@@ -212,17 +212,17 @@
 
           <mat-form-field class="form-field" color="accent">
             <mat-label>Access Key Id</mat-label>
-            <input [(ngModel)]="amazonS3DataAddress.accessKeyId" matInput>
+            <input required [(ngModel)]="amazonS3DataAddress.accessKeyId" matInput>
           </mat-form-field>
 
           <mat-form-field class="form-field" color="accent">
             <mat-label>Secret Access Key</mat-label>
-            <input [(ngModel)]="amazonS3DataAddress.secretAccessKey" matInput>
+            <input required [(ngModel)]="amazonS3DataAddress.secretAccessKey" matInput>
           </mat-form-field>
 
           <mat-form-field class="form-field" color="accent">
             <mat-label>Endpoint Override</mat-label>
-            <input [(ngModel)]="amazonS3DataAddress.endpointOverride" matInput>
+            <input required [(ngModel)]="amazonS3DataAddress.endpointOverride" matInput>
           </mat-form-field>
         </div>
 

@@ -22,63 +22,6 @@
     </mat-select>
   </mat-form-field>
 
-  <div *ngIf="storageTypeId === 'HttpData'">
-    <mat-form-field class="form-field" color="accent">
-      <mat-label>Name</mat-label>
-      <input required [(ngModel)]="httpDataAddress.name" matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field" color="accent">
-      <mat-label>Path</mat-label>
-      <input [(ngModel)]="httpDataAddress.path" matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field" color="accent">
-      <mat-label>Base URL</mat-label>
-      <input required [(ngModel)]="httpDataAddress.baseUrl" matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field" color="accent">
-      <mat-label>Auth Key</mat-label>
-      <input [(ngModel)]="httpDataAddress.authKey" matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field" color="accent">
-      <mat-label>Auth Code</mat-label>
-      <input [(ngModel)]="httpDataAddress.authCode" matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field" color="accent">
-      <mat-label>Secret Name</mat-label>
-      <input [(ngModel)]="httpDataAddress.secretName" matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field" color="accent">
-      <mat-label>Proxy Body</mat-label>
-      <input [(ngModel)]="httpDataAddress.proxyBody" matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field" color="accent">
-      <mat-label>Proxy Path</mat-label>
-      <input [(ngModel)]="httpDataAddress.proxyPath" matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field" color="accent">
-      <mat-label>Proxy Query Params</mat-label>
-      <input [(ngModel)]="httpDataAddress.proxyQueryParams" matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field" color="accent">
-      <mat-label>Proxy Method</mat-label>
-      <input [(ngModel)]="httpDataAddress.proxyMethod" matInput>
-    </mat-form-field>
-
-    <mat-form-field class="form-field" color="accent">
-      <mat-label>Content Type</mat-label>
-      <input [(ngModel)]="httpDataAddress.contentType" matInput>
-    </mat-form-field>
-  </div>
-
   <div *ngIf="storageTypeId === 'AmazonS3'">
     <mat-form-field class="form-field" color="accent">
       <mat-label>Region</mat-label>

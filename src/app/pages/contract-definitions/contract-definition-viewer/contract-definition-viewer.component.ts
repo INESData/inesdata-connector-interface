@@ -17,7 +17,7 @@ import { Router } from '@angular/router';
 })
 export class ContractDefinitionViewerComponent implements OnInit {
 
-  contractDefinitions: ContractDefinition[];
+  contractDefinitions: ContractDefinition[] = [];
   private fetch$ = new BehaviorSubject(null);
 
   // Pagination

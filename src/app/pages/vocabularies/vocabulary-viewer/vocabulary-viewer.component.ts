@@ -17,7 +17,7 @@ import { Router } from '@angular/router';
 })
 export class VocabularyViewerComponent implements OnInit {
 
-  vocabularies: Vocabulary[];
+  vocabularies: Vocabulary[] = [];
 
   isTransferring = false;
   private fetch$ = new BehaviorSubject(null);

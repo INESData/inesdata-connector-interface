@@ -1,6 +1,5 @@
 export const CKEDITOR_CONFIG = {
   toolbar: [ 'heading', '|',
-    'fontfamily','fontsize',
     'bold', 'italic', '|',
     'link','|',
     'outdent','indent','|',

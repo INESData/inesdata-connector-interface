@@ -17,7 +17,7 @@ import { Router } from '@angular/router';
 })
 export class AssetViewerComponent implements OnInit {
 
-  assets: Asset[];
+  assets: Asset[] = [];
 
   isTransferring = false;
   private fetch$ = new BehaviorSubject(null);

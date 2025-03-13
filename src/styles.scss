@@ -324,12 +324,6 @@ app-json-dialog {
     color: var(--secondary-600);
   }
 
-  .mat-card-header .mat-card-title {
-    font-size: 20px;
-    font-weight: 1000;
-    padding: 0;
-  }
-
   .mdc-dialog__title {
     padding: 0;
   }
@@ -443,10 +437,6 @@ app-json-dialog {
   background-color: var(--secondary-600);
 }
 
-.mat-mdc-tab-group .bg-white {
-  background-color: $grey-400 !important;
-}
-
 .mdc-notched-outline[ng-reflect-open="true"]+.mat-mdc-form-field-infix {
   .mat-mdc-select-arrow {
     svg {
@@ -483,7 +473,7 @@ mat-paginator svg {
 }
 
 .mdc-list-item__secondary-text,
-mat-card-actions:not([disabled]) button,
+mat-card-actions button:not([disabled]),
 button:not([disabled]) mat-icon,
 .mat-mdc-menu-submenu-icon,
 mat-hint,
@@ -503,7 +493,7 @@ mat-dialog-actions button:not([disabled]),
 .mat-warn:hover,
 .mat-warn:hover mat-icon,
 .mat-warn.cdk-focused,
-.mat-warn.cdk-focused mat-icon.align-content-end,
+.mat-warn.cdk-focused mat-icon,
 .mat-warn.mat-mdc-outlined-button:not(:disabled):hover {
   color: var(--secondary-red-500) !important;
   border-color: var(--secondary-red-500) !important;
@@ -607,7 +597,7 @@ mat-card:not(.creation-card) {
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
-  word-wrap: break-word;
+  word-break: break-all;
   box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
@@ -681,6 +671,7 @@ mat-card-actions {
 
 .creation-card .mat-mdc-card-header {
   padding: 0px 0px 20px 0px;
+  display: flex;
 }
 
 app-confirmation-dialog .mat-mdc-dialog-title,

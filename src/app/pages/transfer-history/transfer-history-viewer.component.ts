@@ -13,7 +13,7 @@ import { PageEvent } from '@angular/material/paginator';
 })
 export class TransferHistoryViewerComponent implements OnInit {
 
-  columns: string[] = ['state', 'lastUpdated', 'assetId', 'contractId', 'action'];
+  columns: string[] = ['state', 'lastUpdated', 'assetId', 'contractId'];
   transferProcesses: TransferProcess[];
   storageExplorerLinkTemplate: string | undefined;
 
@@ -30,28 +30,6 @@ export class TransferHistoryViewerComponent implements OnInit {
     this.countTransferProcesses();
     this.loadTransferProcesses(this.currentPage);
     this.storageExplorerLinkTemplate = environment.runtime.storageExplorerLinkTemplate
-  }
-
-  onDeprovision(transferProcess: TransferProcess): void {
-
-    const dialogData = new ConfirmDialogModel("Confirm deprovision", `Deprovisioning resources for transfer [${transferProcess["@id"]}] will take some time and once started, it cannot be stopped.`)
-    dialogData.confirmColor = "warn";
-    dialogData.confirmText = "Confirm";
-    dialogData.cancelText = "Abort";
-    const ref = this.dialog.open(ConfirmationDialogComponent, { maxWidth: '20%', data: dialogData });
-
-    ref.afterClosed().subscribe(res => {
-      if (res) {
-        this.transferProcessService.deprovisionTransferProcess(transferProcess["@id"]!).subscribe(() => {
-          this.countTransferProcesses();
-          this.loadTransferProcesses(this.currentPage);
-        });
-      }
-    });
-  }
-
-  showDeprovisionButton(transferProcess: TransferProcess) {
-    return ['COMPLETED', 'PROVISIONED', 'REQUESTED', 'REQUESTED_ACK', 'IN_PROGRESS', 'STREAMING'].includes(transferProcess.state);
   }
 
   loadTransferProcesses(offset: number) {
