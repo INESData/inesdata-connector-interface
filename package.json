@@ -24,7 +24,7 @@
     "@angular/material": "~15.2.9",
     "@angular/platform-browser": "^17.3.11",
     "@angular/platform-browser-dynamic": "^17.3.11",
-    "@angular/router": "^17.3.11",
+    "@angular/router": "^19.2.10",
     "@auth0/angular-jwt": "^5.2.0",
     "@ckeditor/ckeditor5-angular": "^7.0.1",
     "@ckeditor/ckeditor5-build-classic": "^43.1.0",
