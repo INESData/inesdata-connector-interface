@@ -27,13 +27,27 @@
       </mat-select>
     </mat-form-field>
 
-    <mat-form-field class="form-field form-field-assets" id="form-field-contract-assets">
+    <mat-form-field class="form-field form-field-assets" id="form-field-contract-assets" floatLabel="always">
+
       <mat-label>Assets</mat-label>
-      <mat-select [(ngModel)]="assets" multiple>
-        <mat-option *ngFor="let asset of availableAssets" [value]="asset">
-          {{asset.id}}
+      <mat-autocomplete #auto="matAutocomplete" [displayWith]="displayAsset">
+        <mat-option *ngFor="let asset of filteredAssets" [value]="asset" (onSelectionChange)="addAsset($event, asset)">
+          {{ asset.id }}
         </mat-option>
-      </mat-select>
+      </mat-autocomplete>
+
+      <mat-chip-listbox>
+        <mat-chip *ngFor="let asset of selectedAssets" [removable]="true" (removed)="removeAsset(asset)">
+          {{ asset.id }}
+          <mat-icon matChipRemove>cancel</mat-icon>
+        </mat-chip>
+
+        <input
+          matInput
+          placeholder="Search assets"
+          [formControl]="assetControl"
+          [matAutocomplete]="auto">
+      </mat-chip-listbox>
     </mat-form-field>
   </div>
 

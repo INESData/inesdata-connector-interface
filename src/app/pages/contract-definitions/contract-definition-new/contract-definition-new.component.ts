@@ -1,12 +1,12 @@
 import { Component, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { AssetService } from "../../../shared/services/asset.service";
 import { PolicyService } from "../../../shared/services/policy.service";
-import { Asset, PolicyDefinition, ContractDefinitionInput } from "../../../shared/models/edc-connector-entities";
+import { Asset, PolicyDefinition, ContractDefinitionInput, QuerySpec } from "../../../shared/models/edc-connector-entities";
 import { NotificationService } from 'src/app/shared/services/notification.service';
 import { ContractDefinitionService } from 'src/app/shared/services/contractDefinition.service';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, finalize, Observable, of, startWith, switchMap, tap } from 'rxjs';
 import { Router } from '@angular/router';
-import { NgModel } from '@angular/forms';
+import { FormControl, NgModel } from '@angular/forms';
 
 
 @Component({
@@ -16,13 +16,16 @@ import { NgModel } from '@angular/forms';
 })
 export class ContractDefinitionNewComponent implements OnInit {
 
+  assetControl = new FormControl('');
+  filteredAssets: Asset[] = [];
+  selectedAssets: Asset[] = [];
+  isLoading = false;
   policies: Array<PolicyDefinition> = [];
   availableAssets: Asset[] = [];
   name: string = '';
   editMode = false;
   accessPolicy?: PolicyDefinition;
   contractPolicy?: PolicyDefinition;
-  assets: Asset[] = [];
   contractDefinition: ContractDefinitionInput = {
     "@id": '',
     assetsSelector: [],
@@ -45,14 +48,49 @@ export class ContractDefinitionNewComponent implements OnInit {
       this.accessPolicy = this.policies.find(policy => policy['@id'] === this.contractDefinition.accessPolicyId);
       this.contractPolicy = this.policies.find(policy => policy['@id'] === this.contractDefinition.contractPolicyId);
     });
-    this.assetService.requestAssets().subscribe(assets => {
-      this.availableAssets = assets;
-      // preselection
-      if (this.contractDefinition) {
-        const assetIds = this.contractDefinition.assetsSelector.map(c => c.operandRight?.toString());
-        this.assets = this.availableAssets.filter(asset => assetIds.includes(asset.id));
-      }
-    })
+
+    this.assetControl.valueChanges.pipe(
+      startWith(''),
+      tap(() => this.isLoading = true),
+      switchMap(value => {
+        const query = typeof value === 'string' ? value.trim() : '';
+        const querySpec: QuerySpec = {
+          offset: 0,
+          limit: 50,
+          filterExpression: [
+            {
+              operandLeft: 'id',
+              operator: 'ilike',
+              operandRight: `%${query}%`
+            }
+          ]
+        };
+        return this.assetService.requestAssets(querySpec)
+        .pipe(
+          finalize(() => this.isLoading = false)
+        );
+      })
+    ).subscribe(results => {
+      this.filteredAssets = results.filter(
+        asset => !this.selectedAssets.some(sel => sel.id === asset.id)
+      );
+
+    });
+  }
+
+  displayAsset(asset: Asset): string {
+    return asset ? asset.id : '';
+  }
+
+    addAsset(event: any, asset: Asset): void {
+    if (event.isUserInput && !this.selectedAssets.find(a => a.id === asset.id)) {
+      this.selectedAssets.push(asset);
+      this.assetControl.setValue('');
+    }
+  }
+
+  removeAsset(asset: Asset): void {
+    this.selectedAssets = this.selectedAssets.filter(a => a.id !== asset.id);
   }
 
   onSave() {
@@ -69,8 +107,9 @@ export class ContractDefinitionNewComponent implements OnInit {
     this.contractDefinition.contractPolicyId = this.contractPolicy['@id']!;
     this.contractDefinition.assetsSelector = [];
 
-    if (this.assets.length > 0) {
-      const ids = this.assets.map(asset => asset.id);
+    if (this.selectedAssets.length > 0) {
+      const ids = this.selectedAssets.map(asset => asset.id);
+
       this.contractDefinition.assetsSelector = [...this.contractDefinition.assetsSelector, {
         operandLeft: 'https://w3id.org/edc/v0.0.1/ns/id',
         operator: 'in',
